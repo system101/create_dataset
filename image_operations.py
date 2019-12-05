@@ -211,13 +211,13 @@ class Zoom(Image):
         if isinstance(images, list): # in case images passed from other operation
             self.images = images
         else: # in case images is original
-            self.images = [images] * 7 # because zoom has 8 posibilities (4 IN and 3 OUT)
+            self.images = [images] * 6 # because zoom has 6 posibilities (3 IN and 3 OUT)
         self.operation = 'z'
         self.generate_Zoom()
 
     def generate_Zoom(self):
         combination = []
-        zoom_in_out = [[1.1,1.2,1.3],[0.6,0.7,0.8,0.9]]
+        zoom_in_out = [[1.1,1.2,1.3],[0.7,0.8,0.9]]
 
         # Run every zoom level and apply to all of the input images
         for in_out in range(2): 
@@ -261,6 +261,68 @@ class Zoom(Image):
                         gen_img.set_operation(image_name+str(int(zoom_level*10)))
                         combination.append(gen_img)
         self.images = combination # add all generated images to the newly created Image object
+
+
+
+class Shearing(Image):
+    def __init__(self, images):
+        super().__init__(images)
+        if isinstance(images, list): # in case images passed from other operation
+            self.images = images
+        else: # in case images is original
+            self.images = [images] * 8 # because shearing has 8 posibilities (4 LEFT and 4 RIGHT)
+        self.operation = 's'
+        self.generate_Shearing()
+
+    def generate_Shearing(self):
+        '''
+        shear left range [0.6,0.9]
+        shear right range [0.1,0.4]
+        '''
+        combination = []
+        leftRight = [0,1]
+        left_and_right_shear = [[0.1,0.2,0.3,0.4],[0.6,0.7,0.8,0.9]] # right and then left
+        
+        for image in self.images: # loop to all the input images
+            for isShearingLeft in leftRight: #[0,1]
+                for angle in left_and_right_shear[isShearingLeft]:
+                    img = image.get_image()
+                    y, x = img.shape[:2]
+                    distance_from_origin = angle
+                    s_l = [0,0];  s_r = [y-1,0]      # source top-left corner; source top-right corner 
+                    s_b = [0,x-1]                    # source bottom-left corner
+                    image_name = image.get_operation() + self.operation
+                    
+                    if(isShearingLeft):
+                        d_l = [0,0];  d_r = [int(distance_from_origin*(x-1)),0]   # destination top-left corner ; destination top-right corner                            
+                        d_b = [int((1-distance_from_origin)*(x-1)),y-1]           # destination bottom-left corner
+                    else:
+                        d_l = [int(distance_from_origin*(x-1)),0];  d_r = [x-1,0]   # destination top-left corner ; destination top-right corner                            
+                        d_b = [0,y-1]                                               # destination bottom-left corner
+
+                    src_points = np.float32([s_l, s_r, s_b])
+                    dst_points = np.float32([d_l, d_r, d_b])
+                    affine_matrix = cv2.getAffineTransform(src_points, dst_points)
+                    img_output = cv2.warpAffine(img, affine_matrix, (y,x))
+                    gen_img = Image(img_output)
+                    gen_img.set_operation(image_name+str(int(angle*10)))
+                    combination.append(gen_img)
+                    
+        self.images = combination # add all generated images to the newly created Image object
+
+
+class HitAndMiss(Image):
+    def __init__(self, images):
+        super().__init__(images)
+        if isinstance(images, list): # in case images passed from other operation
+            self.images = images
+        else: # in case images is original
+            self.images = [images] * 2 # because hit and miss has 2 posibilities (10 amd 136 kernel)
+        self.operation = 'h'
+        self.generate_HitAndMiss()
+
+    def generate_HitAndMiss(self):
+        
 
 def save_images(img_dir, des, img):
     rename_image = image_dir.split('/')
@@ -347,10 +409,9 @@ if __name__ == '__main__':
 ##        do_de = Erosion(Dilation(image_object).get_image())
 ##        do_ed = Dilation(Erosion(image_object).get_image())
 ##        do_zoom = Zoom(image_object)
+        do_shearing = Shearing(image_object)
 
-        
-        
-        processed_image = do_e.get_image()
+        processed_image = do_shearing.get_image()
         save_images(image_dir, destination_folder,processed_image)
 
 #''' THE WORKING CODE (END) '''
