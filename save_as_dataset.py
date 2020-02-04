@@ -3,10 +3,7 @@ import cv2
 import glob
 import numpy as np
 
-def load_data(file_dir):
-    # returns: train_images , train_labels 
-    data = np.load('my_EMNIST.npz')
-    return data['arr_0'], data['arr_1'] 
+
 
 
 
@@ -32,6 +29,13 @@ def load_data(file_dir):
 
 ##load_data('my_EMNIST.npz')
 
+
+
+def load_data(file_dir):
+    # returns: train_images , train_labels 
+    data = np.load('my_EMNIST.npz')
+    return data['arr_0'], data['arr_1'] 
+    
 def create_dataset(image_file_dir):
     file_dir = image_file_dir
     count_label = 0
